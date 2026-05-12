@@ -25,7 +25,8 @@
     <style>
         body {
             font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #e0e7ff 0%, #fae8ff 50%, #fce7f3 100%);
+            /* Se cambiaron los colores por tonos más profundos y vibrantes */
+            background: linear-gradient(135deg, #4c1d95 0%, #7e22ce 50%, #db2777 100%);
             background-size: 200% 200%;
             animation: gradientBG 15s ease infinite;
         }
@@ -34,6 +35,15 @@
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
+        }
+
+        /* Ocultar barra de desplazamiento en la pantalla de inicio */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
 
         .chat-scroll::-webkit-scrollbar { width: 6px; }
@@ -51,9 +61,11 @@
         }
         
         .glass-panel {
-            background: rgba(255, 255, 255, 0.85);
+            /* Tarjeta ligeramente más opaca para contrastar con el fondo oscuro */
+            background: rgba(255, 255, 255, 0.92);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
         }
 
         .bubble-me {
@@ -88,7 +100,8 @@
     <audio id="notification-sound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" preload="auto"></audio>
 
     <!-- Pantalla de Login / Selección de Avatar -->
-    <div id="login-screen" class="glass-panel p-6 sm:p-8 m-4 rounded-3xl shadow-2xl w-full max-w-lg text-center relative overflow-y-auto max-h-[95dvh] transition-all duration-500 transform z-50">
+    <!-- Se agregó la clase 'no-scrollbar' y se redujo el padding en móviles (p-5 en vez de p-6) -->
+    <div id="login-screen" class="glass-panel p-5 sm:p-8 m-4 rounded-3xl shadow-2xl w-full max-w-lg text-center relative overflow-y-auto no-scrollbar max-h-[90dvh] transition-all duration-500 transform z-50">
         <div class="absolute -top-6 -left-6 text-6xl opacity-20 animate-bounce-slow">✨</div>
         <div class="absolute -bottom-4 -right-4 text-6xl opacity-20 animate-pulse">🎈</div>
 
@@ -250,7 +263,8 @@
         const avatarContainer = document.getElementById('avatar-container');
         avataresDisponibles.forEach(avatar => {
             const btn = document.createElement('button');
-            btn.className = 'avatar-btn w-11 h-11 sm:w-14 sm:h-14 text-2xl sm:text-3xl bg-gray-50 rounded-xl sm:rounded-2xl border-2 border-gray-200 hover:bg-white hover:border-purple-300 hover:shadow-md focus:outline-none flex items-center justify-center';
+            // Se redujo el tamaño de los avatares en móviles (w-10 h-10 text-xl) para que quepan mejor
+            btn.className = 'avatar-btn w-10 h-10 sm:w-14 sm:h-14 text-xl sm:text-3xl bg-gray-50 rounded-xl sm:rounded-2xl border-2 border-gray-200 hover:bg-white hover:border-purple-300 hover:shadow-md focus:outline-none flex items-center justify-center';
             btn.innerText = avatar;
             btn.addEventListener('click', (e) => {
                 document.querySelectorAll('#avatar-container button').forEach(b => b.classList.remove('avatar-selected'));
@@ -282,7 +296,6 @@
                 const cred = await signInAnonymously(auth); 
                 currentUser = cred.user;
                 
-                // Forzamos manualmente el inicio para evitar el bug de sesión guardada
                 try {
                     mostrarChat();
                     iniciarPresencia();
@@ -312,9 +325,7 @@
             }
         });
 
-        // --- MANEJO DE ESTADO AL DESCONECTARSE ---
         onAuthStateChanged(auth, (user) => {
-            // Solo escuchamos este evento si el usuario cerró sesión
             if (!user) {
                 currentUser = null;
                 mostrarLogin();
@@ -369,6 +380,7 @@
             heartbeatInterval = setInterval(actualizarEstado, 30000);
         }
 
+        // --- EL CEREBRO DE LAS NOTIFICACIONES ESTÁ AQUÍ ---
         function escucharUsuariosConectados() {
             const queryRef = collection(db, 'usuarios_conectados');
             unsubscribePresence = onSnapshot(queryRef, (snapshot) => {
@@ -377,13 +389,33 @@
                 listContainer.innerHTML = '';
                 let count = 0;
 
+                // 1. Extraemos nuestras notificaciones personales
+                let misNotificaciones = {};
+                snapshot.forEach((docSnap) => {
+                    if (docSnap.id === currentUser.uid) {
+                        misNotificaciones = docSnap.data().notificaciones || {};
+                    }
+                });
+
+                window.lastNotifTimes = window.lastNotifTimes || {};
+
+                // 2. Dibujamos a todos los usuarios y vemos si tienen un mensaje nuevo para nosotros
                 snapshot.forEach((docSnap) => {
                     const data = docSnap.data();
                     const uid = docSnap.id;
                     if (ahora - data.lastSeen < 90000) {
                         count++;
                         if (uid !== currentUser.uid) {
-                            crearBotonUsuarioOnline(uid, data.name, data.avatar, listContainer);
+                            // Revisamos si este usuario nos mandó un mensaje y si no estamos ya en su sala
+                            const hasUnread = misNotificaciones[uid] > 0 && activeChatId !== generarIdPrivado(uid);
+                            
+                            crearBotonUsuarioOnline(uid, data.name, data.avatar, listContainer, hasUnread);
+
+                            // Si tiene un mensaje no leído, y es nuevo (mayor al tiempo anterior guardado), ¡Hacemos sonar la alerta!
+                            if (hasUnread && (!window.lastNotifTimes[uid] || misNotificaciones[uid] > window.lastNotifTimes[uid])) {
+                                window.lastNotifTimes[uid] = misNotificaciones[uid];
+                                try { notificationSound.play(); } catch(e){} 
+                            }
                         }
                     }
                 });
@@ -391,21 +423,36 @@
             });
         }
 
-        function crearBotonUsuarioOnline(uid, name, avatar, container) {
+        function crearBotonUsuarioOnline(uid, name, avatar, container, hasUnread = false) {
             const btn = document.createElement('button');
             const isSelected = activeChatId === generarIdPrivado(uid);
             
-            btn.className = `flex items-center gap-3 p-2 rounded-xl transition-all w-full text-left group
-                             ${isSelected ? 'bg-purple-100 border border-purple-200 shadow-inner' : 'hover:bg-gray-50 bg-white border border-transparent'}`;
+            // Si tiene mensaje sin leer, el botón parpadea en rojo
+            let baseClasses = 'flex items-center gap-3 p-2 rounded-xl transition-all w-full text-left group ';
+            if (isSelected) {
+                baseClasses += 'bg-purple-100 border border-purple-200 shadow-inner';
+            } else if (hasUnread) {
+                baseClasses += 'bg-red-50 border border-red-300 shadow-md animate-[pulse_2s_ease-in-out_infinite]';
+            } else {
+                baseClasses += 'hover:bg-gray-50 bg-white border border-transparent';
+            }
+            btn.className = baseClasses;
+            
+            // Indicador visual (globo rojo rebotando vs punto verde)
+            const statusIndicator = hasUnread 
+                ? `<div class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 border-2 border-white rounded-full animate-bounce shadow-sm"></div>`
+                : `<div class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></div>`;
             
             btn.innerHTML = `
                 <div class="relative flex-shrink-0">
-                    <div class="w-10 h-10 rounded-xl bg-white border ${isSelected ? 'border-primary' : 'border-gray-200'} flex items-center justify-center text-xl shadow-sm">${avatar}</div>
-                    <div class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></div>
+                    <div class="w-10 h-10 rounded-xl bg-white border ${isSelected ? 'border-primary' : (hasUnread ? 'border-red-400' : 'border-gray-200')} flex items-center justify-center text-xl shadow-sm">${avatar}</div>
+                    ${statusIndicator}
                 </div>
-                <div class="overflow-hidden">
-                    <p class="font-bold text-sm ${isSelected ? 'text-primary' : 'text-gray-700'} truncate">${escapeHTML(name)}</p>
-                    <p class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider group-hover:text-primary transition-colors">Chat Privado</p>
+                <div class="overflow-hidden flex-grow">
+                    <p class="font-bold text-sm ${isSelected ? 'text-primary' : (hasUnread ? 'text-red-600' : 'text-gray-700')} truncate">${escapeHTML(name)}</p>
+                    <p class="text-[10px] ${hasUnread ? 'text-red-500 font-bold' : 'text-gray-400 font-semibold'} uppercase tracking-wider group-hover:text-primary transition-colors">
+                        ${hasUnread ? '¡Nuevo Mensaje!' : 'Chat Privado'}
+                    </p>
                 </div>
             `;
             
@@ -433,6 +480,15 @@
                 ? '<span class="text-purple-200">🔒 Solo ustedes dos</span>' 
                 : `<span class="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-green-300 shadow-[0_0_8px_rgba(134,239,172,0.8)] animate-pulse"></span> <span id="online-count">Cargando...</span>`;
             document.getElementById('chat-header-icon').innerText = avatar;
+
+            // Si es un chat privado, borramos la notificación ("marcamos como leído")
+            if (esPrivado && currentUser) {
+                const otroUid = chatId.split('_').find(id => id !== currentUser.uid);
+                if (otroUid) {
+                    const myRef = doc(db, 'usuarios_conectados', currentUser.uid);
+                    setDoc(myRef, { notificaciones: { [otroUid]: 0 } }, { merge: true }).catch(e=>console.log(e));
+                }
+            }
 
             cerrarSidebar();
             escucharUsuariosConectados(); 
@@ -492,6 +548,18 @@
                     avatar: userData.avatar,
                     createdAt: serverTimestamp() 
                 });
+
+                // Si estamos en un chat privado, le "tocamos la puerta" al otro usuario en su base de datos
+                if (activeChatId !== 'global') {
+                    const otroUid = activeChatId.split('_').find(id => id !== currentUser.uid);
+                    if (otroUid) {
+                        const otroUserRef = doc(db, 'usuarios_conectados', otroUid);
+                        await setDoc(otroUserRef, {
+                            notificaciones: { [currentUser.uid]: Date.now() }
+                        }, { merge: true });
+                    }
+                }
+
             } catch (error) { console.error("Error al enviar:", error); } 
             finally { messageInput.focus(); }
         });
