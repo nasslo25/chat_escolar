@@ -25,7 +25,6 @@
     <style>
         body {
             font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            /* Se cambiaron los colores por tonos más profundos y vibrantes */
             background: linear-gradient(135deg, #4c1d95 0%, #7e22ce 50%, #db2777 100%);
             background-size: 200% 200%;
             animation: gradientBG 15s ease infinite;
@@ -37,14 +36,8 @@
             100% { background-position: 0% 50%; }
         }
 
-        /* Ocultar barra de desplazamiento en la pantalla de inicio */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
         .chat-scroll::-webkit-scrollbar { width: 6px; }
         .chat-scroll::-webkit-scrollbar-track { background: transparent; }
@@ -61,7 +54,6 @@
         }
         
         .glass-panel {
-            /* Tarjeta ligeramente más opaca para contrastar con el fondo oscuro */
             background: rgba(255, 255, 255, 0.92);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.5);
@@ -74,10 +66,7 @@
             box-shadow: 0 4px 15px -3px rgba(217, 70, 239, 0.4);
         }
 
-        /* Menú lateral responsivo */
-        #sidebar {
-            transition: transform 0.3s ease-in-out;
-        }
+        #sidebar { transition: transform 0.3s ease-in-out; }
         @media (max-width: 768px) {
             #sidebar {
                 position: absolute;
@@ -87,20 +76,16 @@
                 max-width: 300px;
                 transform: translateX(-100%);
             }
-            #sidebar.open {
-                transform: translateX(0);
-            }
+            #sidebar.open { transform: translateX(0); }
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body class="h-[100dvh] w-full flex items-center justify-center overflow-hidden relative">
 
-    <!-- Audio para notificaciones -->
     <audio id="notification-sound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" preload="auto"></audio>
 
-    <!-- Pantalla de Login / Selección de Avatar -->
-    <!-- Se agregó la clase 'no-scrollbar' y se redujo el padding en móviles (p-5 en vez de p-6) -->
+    <!-- Login -->
     <div id="login-screen" class="glass-panel p-5 sm:p-8 m-4 rounded-3xl shadow-2xl w-full max-w-lg text-center relative overflow-y-auto no-scrollbar max-h-[90dvh] transition-all duration-500 transform z-50">
         <div class="absolute -top-6 -left-6 text-6xl opacity-20 animate-bounce-slow">✨</div>
         <div class="absolute -bottom-4 -right-4 text-6xl opacity-20 animate-pulse">🎈</div>
@@ -124,12 +109,11 @@
         <p id="login-error" class="text-red-500 font-semibold text-sm mt-4 hidden bg-red-50 py-2 rounded-lg">¡Ups! Escribe tu nombre y elige un avatar.</p>
     </div>
 
-    <!-- Pantalla Principal del Chat (App) -->
+    <!-- App Chat -->
     <div id="chat-screen" class="hidden w-full h-full sm:max-w-6xl sm:h-[95dvh] glass-panel sm:rounded-3xl rounded-none shadow-none sm:shadow-2xl flex overflow-hidden relative border-0 sm:border-4 border-white">
         
         <div id="sidebar-overlay" class="hidden absolute inset-0 bg-black/40 z-30 md:hidden backdrop-blur-sm transition-opacity"></div>
 
-        <!-- Panel Lateral -->
         <aside id="sidebar" class="w-full md:w-72 bg-white/90 border-r border-purple-100 flex flex-col shadow-xl md:shadow-none flex-shrink-0">
             <div class="p-4 bg-gradient-to-r from-purple-600 to-primary text-white flex justify-between items-center">
                 <h3 class="font-bold text-lg flex items-center gap-2"><i data-lucide="users" class="w-5 h-5"></i> En Línea</h3>
@@ -144,9 +128,7 @@
                 </div>
             </button>
 
-            <div id="online-users-list" class="flex-grow overflow-y-auto chat-scroll p-2 flex flex-col gap-1">
-                <!-- Se llenará con JS -->
-            </div>
+            <div id="online-users-list" class="flex-grow overflow-y-auto chat-scroll p-2 flex flex-col gap-1"></div>
             
             <div class="p-4 bg-gray-50 border-t border-purple-100 flex items-center gap-3 mt-auto">
                 <div id="current-user-avatar-sidebar" class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-2xl border-2 border-accent shadow-sm"></div>
@@ -160,7 +142,6 @@
             </div>
         </aside>
 
-        <!-- Área Principal -->
         <div class="flex-grow flex flex-col min-w-0 bg-white/40">
             <header class="bg-gradient-to-r from-primary via-purple-500 to-secondary text-white p-3 sm:p-4 flex justify-between items-center shadow-md z-10">
                 <div class="flex items-center gap-2 sm:gap-3">
@@ -213,7 +194,6 @@
         </div>
     </div>
 
-    <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -221,7 +201,7 @@
 
         lucide.createIcons();
 
-        // TU CONFIGURACIÓN DE FIREBASE 
+        // TU CONFIGURACIÓN
         const firebaseConfig = {
           apiKey: "AIzaSyCtZN4Pyu10EnFvKgv_s8k0HzrHzf8NUCs",
           authDomain: "chat-escolar-e5141.firebaseapp.com",
@@ -259,11 +239,9 @@
         const messageInput = document.getElementById('message-input');
         const chatForm = document.getElementById('chat-form');
 
-        // Generar Avatares
         const avatarContainer = document.getElementById('avatar-container');
         avataresDisponibles.forEach(avatar => {
             const btn = document.createElement('button');
-            // Se redujo el tamaño de los avatares en móviles (w-10 h-10 text-xl) para que quepan mejor
             btn.className = 'avatar-btn w-10 h-10 sm:w-14 sm:h-14 text-xl sm:text-3xl bg-gray-50 rounded-xl sm:rounded-2xl border-2 border-gray-200 hover:bg-white hover:border-purple-300 hover:shadow-md focus:outline-none flex items-center justify-center';
             btn.innerText = avatar;
             btn.addEventListener('click', (e) => {
@@ -275,7 +253,6 @@
             avatarContainer.appendChild(btn);
         });
 
-        // --- LÓGICA DE LOGIN MANUAL ---
         document.getElementById('join-btn').addEventListener('click', async (e) => {
             const name = usernameInput.value.trim();
             if (!name || !userData.avatar) {
@@ -311,13 +288,7 @@
                 console.error("Error de Autenticación:", error);
                 const btn = document.getElementById('join-btn');
                 const errText = document.getElementById('login-error');
-                
-                if (error.code === 'auth/operation-not-allowed') {
-                    errText.innerText = "Error: Debes habilitar 'Anónimo' en Firebase > Authentication > Sign-in method.";
-                } else {
-                    errText.innerText = "Error al conectar: " + error.message;
-                }
-                
+                errText.innerText = "Error al conectar: " + error.message;
                 errText.classList.remove('hidden');
                 btn.disabled = false;
                 btn.innerHTML = '¡Entrar al Patio! <i data-lucide="rocket" class="w-6 h-6"></i>';
@@ -380,7 +351,6 @@
             heartbeatInterval = setInterval(actualizarEstado, 30000);
         }
 
-        // --- EL CEREBRO DE LAS NOTIFICACIONES ESTÁ AQUÍ ---
         function escucharUsuariosConectados() {
             const queryRef = collection(db, 'usuarios_conectados');
             unsubscribePresence = onSnapshot(queryRef, (snapshot) => {
@@ -389,7 +359,6 @@
                 listContainer.innerHTML = '';
                 let count = 0;
 
-                // 1. Extraemos nuestras notificaciones personales
                 let misNotificaciones = {};
                 snapshot.forEach((docSnap) => {
                     if (docSnap.id === currentUser.uid) {
@@ -399,19 +368,15 @@
 
                 window.lastNotifTimes = window.lastNotifTimes || {};
 
-                // 2. Dibujamos a todos los usuarios y vemos si tienen un mensaje nuevo para nosotros
                 snapshot.forEach((docSnap) => {
                     const data = docSnap.data();
                     const uid = docSnap.id;
                     if (ahora - data.lastSeen < 90000) {
                         count++;
                         if (uid !== currentUser.uid) {
-                            // Revisamos si este usuario nos mandó un mensaje y si no estamos ya en su sala
                             const hasUnread = misNotificaciones[uid] > 0 && activeChatId !== generarIdPrivado(uid);
-                            
                             crearBotonUsuarioOnline(uid, data.name, data.avatar, listContainer, hasUnread);
 
-                            // Si tiene un mensaje no leído, y es nuevo (mayor al tiempo anterior guardado), ¡Hacemos sonar la alerta!
                             if (hasUnread && (!window.lastNotifTimes[uid] || misNotificaciones[uid] > window.lastNotifTimes[uid])) {
                                 window.lastNotifTimes[uid] = misNotificaciones[uid];
                                 try { notificationSound.play(); } catch(e){} 
@@ -427,7 +392,6 @@
             const btn = document.createElement('button');
             const isSelected = activeChatId === generarIdPrivado(uid);
             
-            // Si tiene mensaje sin leer, el botón parpadea en rojo
             let baseClasses = 'flex items-center gap-3 p-2 rounded-xl transition-all w-full text-left group ';
             if (isSelected) {
                 baseClasses += 'bg-purple-100 border border-purple-200 shadow-inner';
@@ -438,7 +402,6 @@
             }
             btn.className = baseClasses;
             
-            // Indicador visual (globo rojo rebotando vs punto verde)
             const statusIndicator = hasUnread 
                 ? `<div class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 border-2 border-white rounded-full animate-bounce shadow-sm"></div>`
                 : `<div class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></div>`;
@@ -475,13 +438,12 @@
             activeChatInfo = { name: nombre, avatar: avatar, isPrivate: esPrivado };
             isFirstLoad = false;
 
-            document.getElementById('chat-header-title').innerText = esPrivado ? `Privado: ${nombre}` : 'Patio Central';
+            document.getElementById('chat-header-title').innerText = esPrivado ? `Privado: ${escapeHTML(nombre)}` : 'Patio Central';
             document.getElementById('chat-header-subtitle').innerHTML = esPrivado 
                 ? '<span class="text-purple-200">🔒 Solo ustedes dos</span>' 
                 : `<span class="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-green-300 shadow-[0_0_8px_rgba(134,239,172,0.8)] animate-pulse"></span> <span id="online-count">Cargando...</span>`;
             document.getElementById('chat-header-icon').innerText = avatar;
 
-            // Si es un chat privado, borramos la notificación ("marcamos como leído")
             if (esPrivado && currentUser) {
                 const otroUid = chatId.split('_').find(id => id !== currentUser.uid);
                 if (otroUid) {
@@ -513,7 +475,13 @@
                 let mensajes = [];
                 snapshot.forEach((docSnap) => mensajes.push({ id: docSnap.id, ...docSnap.data() }));
                 
-                mensajes.sort((a, b) => (a.createdAt ? a.createdAt.toMillis() : Date.now()) - (b.createdAt ? b.createdAt.toMillis() : Date.now()));
+                // ORDENAMIENTO SEGURO ANTIFALLOS
+                mensajes.sort((a, b) => {
+                    const tA = (a.createdAt && typeof a.createdAt.toMillis === 'function') ? a.createdAt.toMillis() : Date.now();
+                    const tB = (b.createdAt && typeof b.createdAt.toMillis === 'function') ? b.createdAt.toMillis() : Date.now();
+                    return tA - tB;
+                });
+
                 if(mensajes.length > 100) mensajes = mensajes.slice(mensajes.length - 100);
 
                 renderizarMensajes(mensajes);
@@ -526,6 +494,9 @@
                     });
                 }
                 loadInitial = false;
+            }, (error) => {
+                console.error("Error al leer Firestore:", error);
+                messagesContainer.innerHTML = `<div class="p-4 bg-red-100 text-red-600 rounded-xl m-4 text-center font-bold">Error conectando al chat: ${error.message}</div>`;
             });
         }
 
@@ -549,7 +520,6 @@
                     createdAt: serverTimestamp() 
                 });
 
-                // Si estamos en un chat privado, le "tocamos la puerta" al otro usuario en su base de datos
                 if (activeChatId !== 'global') {
                     const otroUid = activeChatId.split('_').find(id => id !== currentUser.uid);
                     if (otroUid) {
@@ -564,55 +534,67 @@
             finally { messageInput.focus(); }
         });
 
+        // DIBUJO PROTEGIDO CON TRY/CATCH
         function renderizarMensajes(mensajes) {
-            const isScrolledToBottom = messagesContainer.scrollHeight - messagesContainer.clientHeight <= messagesContainer.scrollTop + 80;
+            try {
+                const isScrolledToBottom = messagesContainer.scrollHeight - messagesContainer.clientHeight <= messagesContainer.scrollTop + 80;
 
-            if (mensajes.length === 0) {
-                messagesContainer.innerHTML = `
-                    <div class="flex flex-col items-center justify-center h-full text-gray-400 text-center opacity-80 pt-10">
-                        <div class="text-7xl mb-6 animate-bounce">${activeChatInfo.avatar}</div>
-                        <p class="text-2xl font-bold text-gray-500 mb-2">¡Mucho silencio por aquí!</p>
-                        <p class="text-base font-medium">Anímate y escribe el primer mensaje en ${escapeHTML(activeChatInfo.name)}.</p>
-                    </div>`;
-                return;
-            }
-
-            let html = '';
-            let lastUid = null;
-
-            mensajes.forEach(msg => {
-                const isMe = msg.uid === currentUser.uid;
-                const showHeader = lastUid !== msg.uid;
-                let timeString = msg.createdAt ? msg.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-
-                if (isMe) {
-                    html += `
-                        <div class="flex justify-end mb-1 group message-wrapper ${showHeader ? 'mt-3' : ''}">
-                            <div class="max-w-[80%] md:max-w-[70%]">
-                                <div class="bubble-me p-3.5 px-5 rounded-3xl rounded-tr-sm relative transition-all hover:shadow-lg">
-                                    <p class="text-[15px] font-medium leading-relaxed break-words">${escapeHTML(msg.text)}</p>
-                                    <span class="text-[10px] text-white/70 absolute bottom-1 right-3 opacity-0 group-hover:opacity-100 transition-opacity font-bold">${timeString}</span>
-                                </div>
-                            </div>
+                if (mensajes.length === 0) {
+                    messagesContainer.innerHTML = `
+                        <div class="flex flex-col items-center justify-center h-full text-gray-400 text-center opacity-80 pt-10">
+                            <div class="text-7xl mb-6 animate-bounce">${activeChatInfo.avatar || '💬'}</div>
+                            <p class="text-2xl font-bold text-gray-500 mb-2">¡Mucho silencio por aquí!</p>
+                            <p class="text-base font-medium">Anímate y escribe el primer mensaje.</p>
                         </div>`;
-                } else {
-                    html += `
-                        <div class="flex items-end gap-2.5 mb-1 message-wrapper ${showHeader ? 'mt-3' : ''}">
-                            ${showHeader ? `<div class="w-10 h-10 rounded-2xl bg-white border-2 border-purple-200 flex-shrink-0 flex items-center justify-center text-xl shadow-md mb-1 z-10 transform -rotate-3">${msg.avatar}</div>` : `<div class="w-10 flex-shrink-0"></div>`}
-                            <div class="max-w-[80%] md:max-w-[70%]">
-                                ${showHeader ? `<span class="text-[13px] text-gray-500 ml-3 mb-1 block font-extrabold tracking-wide">${escapeHTML(msg.name)}</span>` : ''}
-                                <div class="bg-white border border-gray-100 text-gray-700 p-3.5 px-5 rounded-3xl rounded-tl-sm shadow-md relative group transition-all hover:shadow-lg">
-                                    <p class="text-[15px] font-medium leading-relaxed break-words">${escapeHTML(msg.text)}</p>
-                                    <span class="text-[10px] text-gray-400 absolute bottom-1 right-3 opacity-0 group-hover:opacity-100 transition-opacity font-bold">${timeString}</span>
-                                </div>
-                            </div>
-                        </div>`;
+                    return;
                 }
-                lastUid = msg.uid;
-            });
 
-            messagesContainer.innerHTML = html;
-            if (isScrolledToBottom) messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                let html = '';
+                let lastUid = null;
+
+                mensajes.forEach(msg => {
+                    const isMe = msg.uid === currentUser.uid;
+                    const showHeader = lastUid !== msg.uid;
+                    
+                    // FECHA SEGURA ANTIFALLOS
+                    let timeString = '';
+                    if (msg.createdAt && typeof msg.createdAt.toDate === 'function') {
+                        timeString = msg.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    }
+
+                    if (isMe) {
+                        html += `
+                            <div class="flex justify-end mb-1 group message-wrapper ${showHeader ? 'mt-3' : ''}">
+                                <div class="max-w-[80%] md:max-w-[70%]">
+                                    <div class="bubble-me p-3.5 px-5 rounded-3xl rounded-tr-sm relative transition-all hover:shadow-lg">
+                                        <p class="text-[15px] font-medium leading-relaxed break-words">${escapeHTML(msg.text)}</p>
+                                        <span class="text-[10px] text-white/70 absolute bottom-1 right-3 opacity-0 group-hover:opacity-100 transition-opacity font-bold">${timeString}</span>
+                                    </div>
+                                </div>
+                            </div>`;
+                    } else {
+                        html += `
+                            <div class="flex items-end gap-2.5 mb-1 message-wrapper ${showHeader ? 'mt-3' : ''}">
+                                ${showHeader ? `<div class="w-10 h-10 rounded-2xl bg-white border-2 border-purple-200 flex-shrink-0 flex items-center justify-center text-xl shadow-md mb-1 z-10 transform -rotate-3">${msg.avatar || '👤'}</div>` : `<div class="w-10 flex-shrink-0"></div>`}
+                                <div class="max-w-[80%] md:max-w-[70%]">
+                                    ${showHeader ? `<span class="text-[13px] text-gray-500 ml-3 mb-1 block font-extrabold tracking-wide">${escapeHTML(msg.name)}</span>` : ''}
+                                    <div class="bg-white border border-gray-100 text-gray-700 p-3.5 px-5 rounded-3xl rounded-tl-sm shadow-md relative group transition-all hover:shadow-lg">
+                                        <p class="text-[15px] font-medium leading-relaxed break-words">${escapeHTML(msg.text)}</p>
+                                        <span class="text-[10px] text-gray-400 absolute bottom-1 right-3 opacity-0 group-hover:opacity-100 transition-opacity font-bold">${timeString}</span>
+                                    </div>
+                                </div>
+                            </div>`;
+                    }
+                    lastUid = msg.uid;
+                });
+
+                messagesContainer.innerHTML = html;
+                if (isScrolledToBottom) messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                
+            } catch (err) {
+                console.error("Error al procesar burbujas:", err);
+                messagesContainer.innerHTML = `<div class="text-red-500 text-center font-bold p-6">Ocurrió un error al cargar los mensajes en pantalla.</div>`;
+            }
         }
 
         const sidebar = document.getElementById('sidebar');
@@ -668,8 +650,10 @@
             lucide.createIcons();
         };
 
+        // FUNCIÓN ESCAPE SEGURA ANTIFALLOS
         function escapeHTML(str) {
-            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag]));
+            if (str === null || str === undefined) return '';
+            return String(str).replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag]));
         }
     </script>
 </body>
