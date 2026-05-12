@@ -106,6 +106,10 @@
             ¡Entrar al Patio! <i data-lucide="rocket" class="w-6 h-6"></i>
         </button>
         <p id="login-error" class="text-red-500 font-semibold text-sm mt-4 hidden bg-red-50 py-2 rounded-lg">¡Ups! Escribe tu nombre y elige un avatar.</p>
+
+        <div class="mt-8 pt-4 border-t border-gray-100 text-xs sm:text-sm text-gray-400 font-bold">
+            Desarrollado con 💻 por <span class="text-primary font-extrabold">[Tu Nombre Aquí]</span>
+        </div>
     </div>
 
     <div id="chat-screen" class="hidden w-full h-full sm:max-w-6xl sm:h-[95dvh] glass-panel sm:rounded-3xl rounded-none shadow-none sm:shadow-2xl flex overflow-hidden relative border-0 sm:border-4 border-white">
@@ -128,15 +132,20 @@
 
             <div id="online-users-list" class="flex-grow overflow-y-auto chat-scroll p-2 flex flex-col gap-1"></div>
             
-            <div class="p-4 bg-gray-50 border-t border-purple-100 flex items-center gap-3 mt-auto">
-                <div id="current-user-avatar-sidebar" class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-2xl border-2 border-accent shadow-sm"></div>
-                <div class="flex-grow overflow-hidden">
-                    <p class="font-bold text-sm text-gray-800 truncate" id="current-user-name-sidebar">Usuario</p>
-                    <p class="text-xs text-green-500 font-bold flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500 inline-block animate-pulse"></span> Tú</p>
+            <div class="p-4 bg-gray-50 border-t border-purple-100 flex flex-col gap-3 mt-auto">
+                <div class="flex items-center gap-3">
+                    <div id="current-user-avatar-sidebar" class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-2xl border-2 border-accent shadow-sm"></div>
+                    <div class="flex-grow overflow-hidden">
+                        <p class="font-bold text-sm text-gray-800 truncate" id="current-user-name-sidebar">Usuario</p>
+                        <p class="text-xs text-green-500 font-bold flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500 inline-block animate-pulse"></span> Tú</p>
+                    </div>
+                    <button id="logout-btn" class="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-xl transition-all" title="Desconectarse y salir">
+                        <i data-lucide="log-out" class="w-5 h-5"></i>
+                    </button>
                 </div>
-                <button id="logout-btn" class="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-xl transition-all" title="Salir">
-                    <i data-lucide="log-out" class="w-5 h-5"></i>
-                </button>
+                <div class="text-[10px] text-center text-gray-400 font-semibold border-t border-gray-200 pt-2">
+                    Creado por <span class="text-primary">[Tu Nombre Aquí]</span>
+                </div>
             </div>
         </aside>
 
@@ -146,6 +155,10 @@
                     <button id="menu-btn" class="md:hidden p-2 bg-white/20 hover:bg-white/30 rounded-xl transition-colors">
                         <i data-lucide="menu" class="w-5 h-5"></i>
                     </button>
+                    <button id="back-to-global-btn" class="hidden bg-white/20 hover:bg-white/30 text-white p-2 sm:p-2.5 rounded-lg sm:rounded-xl shadow-sm transition-colors" title="Volver al Patio Central">
+                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                    </button>
+                    
                     <div class="bg-white/20 backdrop-blur-sm p-2 sm:p-2.5 rounded-xl shadow-sm border border-white/30 hidden sm:flex items-center justify-center">
                         <span id="chat-header-icon" class="text-xl sm:text-2xl drop-shadow-md">🎮</span>
                     </div>
@@ -189,7 +202,6 @@
     </div>
 
     <script type="module">
-        // Se agregó "where" y "Timestamp" a las importaciones
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, onSnapshot, serverTimestamp, setDoc, doc, where, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -219,7 +231,7 @@
         let unsubscribeMessages = null;
         let unsubscribePresence = null;
         let heartbeatInterval = null;
-        let sessionStartTime = null; // NUEVA VARIABLE PARA GUARDAR LA HORA DE ENTRADA
+        let sessionStartTime = null;
 
         const avataresDisponibles = [
             '🦊', '🐱', '🐶', '🐼', '🐸', '🦄', '🐧', '🦖', 
@@ -234,6 +246,7 @@
         const messagesContainer = document.getElementById('messages-container');
         const messageInput = document.getElementById('message-input');
         const chatForm = document.getElementById('chat-form');
+        const backToGlobalBtn = document.getElementById('back-to-global-btn');
 
         const avatarContainer = document.getElementById('avatar-container');
         avataresDisponibles.forEach(avatar => {
@@ -268,7 +281,7 @@
             try { 
                 const cred = await signInAnonymously(auth); 
                 currentUser = cred.user;
-                sessionStartTime = Timestamp.now(); // AQUÍ GUARDAMOS EL MOMENTO EXACTO DE ENTRADA
+                sessionStartTime = Timestamp.now(); 
                 
                 try {
                     mostrarChat();
@@ -432,9 +445,10 @@
             return [currentUser.uid, otroUid].sort().join('_');
         }
 
-        document.getElementById('btn-global-chat').addEventListener('click', () => {
-            abrirChat('global', 'Patio Central', '🎮', false);
-        });
+        // Botón Global del Sidebar y Botón de Volver de la Cabecera
+        const irAlPatioCentral = () => abrirChat('global', 'Patio Central', '🎮', false);
+        document.getElementById('btn-global-chat').addEventListener('click', irAlPatioCentral);
+        backToGlobalBtn.addEventListener('click', irAlPatioCentral);
 
         function abrirChat(chatId, nombre, avatar, esPrivado = false) {
             if (activeChatId === chatId && !isFirstLoad) return;
@@ -448,6 +462,13 @@
                 ? '<span class="text-purple-200">🔒 Solo ustedes dos</span>' 
                 : `<span class="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-green-300 shadow-[0_0_8px_rgba(134,239,172,0.8)] animate-pulse"></span> <span id="online-count">Cargando...</span>`;
             document.getElementById('chat-header-icon').innerText = avatar;
+
+            // Mostrar u ocultar el botón de "Volver" dependiendo si es chat privado
+            if (esPrivado) {
+                backToGlobalBtn.classList.remove('hidden');
+            } else {
+                backToGlobalBtn.classList.add('hidden');
+            }
 
             if (esPrivado && currentUser) {
                 const otroUid = chatId.split('_').find(id => id !== currentUser.uid);
@@ -476,7 +497,6 @@
             const coleccionStr = activeChatId === 'global' ? 'mensajes_colegio' : `chats_privados/${activeChatId}/mensajes`;
             const messagesRef = collection(db, coleccionStr);
             
-            // LA CLAVE ESTÁ AQUÍ: Filtramos para traer solo mensajes nuevos a partir de que entró el usuario
             const q = query(messagesRef, where("createdAt", ">=", sessionStartTime)); 
             
             let loadInitial = true;
@@ -546,7 +566,6 @@
             finally { messageInput.focus(); }
         });
 
-        // FUNCIÓN DE DIBUJO DE MENSAJES (Ahora completa)
         function renderizarMensajes(mensajes) {
             try {
                 const isScrolledToBottom = messagesContainer.scrollHeight - messagesContainer.clientHeight <= messagesContainer.scrollTop + 80;
@@ -601,7 +620,6 @@
 
                 messagesContainer.innerHTML = html;
                 
-                // Hacer scroll hacia abajo automáticamente si estábamos abajo
                 if (isScrolledToBottom) {
                     messagesContainer.scrollTop = messagesContainer.scrollHeight;
                 }
@@ -610,7 +628,6 @@
             }
         }
 
-        // Función para evitar inyecciones de código HTML malicioso
         function escapeHTML(str) {
             if (!str) return '';
             return str.replace(/[&<>'"]/g, 
@@ -638,7 +655,7 @@
         document.getElementById('close-sidebar-btn').addEventListener('click', cerrarSidebar);
         document.getElementById('sidebar-overlay').addEventListener('click', cerrarSidebar);
 
-        // Botón de salir
+        // BOTÓN DE SALIR DEL SISTEMA
         document.getElementById('logout-btn').addEventListener('click', () => {
             if (currentUser) {
                 const userRef = doc(db, 'usuarios_conectados', currentUser.uid);
@@ -647,7 +664,6 @@
             auth.signOut();
         });
 
-        // Limpiar estado al cerrar la pestaña
         window.addEventListener('beforeunload', () => {
             if (currentUser) {
                 const userRef = doc(db, 'usuarios_conectados', currentUser.uid);
