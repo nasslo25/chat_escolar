@@ -45,7 +45,8 @@
         .chat-scroll::-webkit-scrollbar-thumb:hover { background: #c084fc; }
 
         .avatar-btn { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .avatar-btn:hover { transform: scale(1.15) rotate(5deg); }
+        /* Evitamos que haga hover si está deshabilitado */
+        .avatar-btn:not(:disabled):hover { transform: scale(1.15) rotate(5deg); }
         .avatar-selected {
             background-color: #fef08a !important;
             border-color: #f59e0b !important;
@@ -85,6 +86,7 @@
 
     <audio id="notification-sound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" preload="auto"></audio>
 
+    <!-- Login -->
     <div id="login-screen" class="glass-panel p-5 sm:p-8 m-4 rounded-3xl shadow-2xl w-full max-w-lg text-center relative overflow-y-auto no-scrollbar max-h-[90dvh] transition-all duration-500 transform z-50">
         <div class="absolute -top-6 -left-6 text-6xl opacity-20 animate-bounce-slow">✨</div>
         <div class="absolute -bottom-4 -right-4 text-6xl opacity-20 animate-pulse">🎈</div>
@@ -93,25 +95,31 @@
             <span class="text-5xl">🏫</span>
         </div>
         <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary mb-2">Recreo Virtual</h1>
-        <p class="text-gray-500 mb-8 font-medium">Elige tu personaje y entra a la diversión</p>
+        <p class="text-gray-500 mb-6 font-medium">Elige tu personaje y entra a la diversión</p>
 
-        <div class="mb-6 relative">
+        <div class="mb-5 relative">
             <input type="text" id="username-input" placeholder="¿Cómo te llamas?" class="w-full px-5 py-4 rounded-2xl border-2 border-purple-100 bg-white/50 focus:bg-white focus:border-primary focus:ring-4 focus:ring-purple-100 focus:outline-none transition-all text-lg font-semibold text-gray-700 shadow-inner" maxlength="15">
         </div>
 
-        <p class="text-sm font-bold text-gray-400 mb-4 text-left uppercase tracking-wider">Selecciona tu Avatar:</p>
-        <div class="flex justify-center gap-3 mb-8 flex-wrap" id="avatar-container"></div>
+        <p class="text-sm font-bold text-gray-400 mb-3 text-left uppercase tracking-wider">Selecciona tu Avatar:</p>
+        <!-- Contenedor con scroll interno para los avatares -->
+        <div class="flex justify-center gap-3 mb-6 flex-wrap max-h-48 overflow-y-auto chat-scroll p-2 border border-purple-50 rounded-xl bg-white/40 shadow-inner" id="avatar-container"></div>
 
         <button id="join-btn" class="w-full bg-gradient-to-r from-primary to-secondary hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-6 rounded-2xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2 text-lg">
             ¡Entrar al Patio! <i data-lucide="rocket" class="w-6 h-6"></i>
         </button>
-        <p id="login-error" class="text-red-500 font-semibold text-sm mt-4 hidden bg-red-50 py-2 rounded-lg">¡Ups! Escribe tu nombre y elige un avatar.</p>
+        <p id="login-error" class="text-red-500 font-semibold text-sm mt-4 hidden bg-red-50 py-2 rounded-lg border border-red-200">¡Ups! Escribe tu nombre y elige un avatar.</p>
 
-        <div class="mt-8 pt-4 border-t border-gray-100 text-xs sm:text-sm text-gray-400 font-bold">
-            Desarrollado con 💻 por <span class="text-primary font-extrabold">[Tu Nombre Aquí]</span>
+        <!-- Banner / Firma de Autor -->
+        <div class="mt-6 pt-4 border-t border-purple-200/50">
+            <p class="text-gray-500 text-xs sm:text-sm font-semibold tracking-wide">
+                Creado por <span class="font-extrabold text-primary">Nasslo Muñoz Saez</span><br>
+                <span class="text-gray-400 uppercase tracking-widest text-[10px] sm:text-xs">Ingeniero Informático</span>
+            </p>
         </div>
     </div>
 
+    <!-- App Chat -->
     <div id="chat-screen" class="hidden w-full h-full sm:max-w-6xl sm:h-[95dvh] glass-panel sm:rounded-3xl rounded-none shadow-none sm:shadow-2xl flex overflow-hidden relative border-0 sm:border-4 border-white">
         
         <div id="sidebar-overlay" class="hidden absolute inset-0 bg-black/40 z-30 md:hidden backdrop-blur-sm transition-opacity"></div>
@@ -132,20 +140,22 @@
 
             <div id="online-users-list" class="flex-grow overflow-y-auto chat-scroll p-2 flex flex-col gap-1"></div>
             
-            <div class="p-4 bg-gray-50 border-t border-purple-100 flex flex-col gap-3 mt-auto">
-                <div class="flex items-center gap-3">
-                    <div id="current-user-avatar-sidebar" class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-2xl border-2 border-accent shadow-sm"></div>
-                    <div class="flex-grow overflow-hidden">
-                        <p class="font-bold text-sm text-gray-800 truncate" id="current-user-name-sidebar">Usuario</p>
-                        <p class="text-xs text-green-500 font-bold flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500 inline-block animate-pulse"></span> Tú</p>
-                    </div>
-                    <button id="logout-btn" class="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-xl transition-all" title="Desconectarse y salir">
-                        <i data-lucide="log-out" class="w-5 h-5"></i>
-                    </button>
+            <div class="p-4 bg-gray-50 border-t border-purple-100 flex items-center gap-3 mt-auto">
+                <div id="current-user-avatar-sidebar" class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-2xl border-2 border-accent shadow-sm"></div>
+                <div class="flex-grow overflow-hidden">
+                    <p class="font-bold text-sm text-gray-800 truncate" id="current-user-name-sidebar">Usuario</p>
+                    <p class="text-xs text-green-500 font-bold flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500 inline-block animate-pulse"></span> Tú</p>
                 </div>
-                <div class="text-[10px] text-center text-gray-400 font-semibold border-t border-gray-200 pt-2">
-                    Creado por <span class="text-primary">[Tu Nombre Aquí]</span>
-                </div>
+                <button id="logout-btn" class="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-xl transition-all" title="Salir">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <!-- Firma Sidebar -->
+            <div class="bg-gray-100 p-2 text-center border-t border-gray-200">
+                <p class="text-[9px] text-gray-400 font-bold tracking-widest uppercase">
+                    By Nasslo Muñoz Saez • Ing. Informático
+                </p>
             </div>
         </aside>
 
@@ -155,10 +165,6 @@
                     <button id="menu-btn" class="md:hidden p-2 bg-white/20 hover:bg-white/30 rounded-xl transition-colors">
                         <i data-lucide="menu" class="w-5 h-5"></i>
                     </button>
-                    <button id="back-to-global-btn" class="hidden bg-white/20 hover:bg-white/30 text-white p-2 sm:p-2.5 rounded-lg sm:rounded-xl shadow-sm transition-colors" title="Volver al Patio Central">
-                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
-                    </button>
-                    
                     <div class="bg-white/20 backdrop-blur-sm p-2 sm:p-2.5 rounded-xl shadow-sm border border-white/30 hidden sm:flex items-center justify-center">
                         <span id="chat-header-icon" class="text-xl sm:text-2xl drop-shadow-md">🎮</span>
                     </div>
@@ -187,7 +193,8 @@
             </div>
 
             <main id="messages-container" class="flex-grow p-4 md:p-6 overflow-y-auto chat-scroll bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] flex flex-col gap-5 relative">
-                </main>
+                <!-- Se inyectará el loader de forma segura desde JS -->
+            </main>
 
             <footer class="bg-white p-3 sm:p-4 border-t border-purple-100 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] z-10 pb-4">
                 <form id="chat-form" class="flex gap-2 sm:gap-3 relative max-w-4xl mx-auto items-center">
@@ -204,7 +211,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, onSnapshot, serverTimestamp, setDoc, doc, where, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, onSnapshot, serverTimestamp, setDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         lucide.createIcons();
 
@@ -231,12 +238,17 @@
         let unsubscribeMessages = null;
         let unsubscribePresence = null;
         let heartbeatInterval = null;
-        let sessionStartTime = null;
+        
+        // ARRAY PARA GUARDAR QUÉ AVATARES ESTÁN EN USO
+        let avataresEnUso = [];
 
+        // ¡MÁS AVATARES AÑADIDOS! (40 en total)
         const avataresDisponibles = [
             '🦊', '🐱', '🐶', '🐼', '🐸', '🦄', '🐧', '🦖', 
             '🦁', '🐵', '🦉', '🐙', '🐢', '🦋', '👽', '👻',
-            '🤖', '🤡', '🤠', '😎'
+            '🤖', '🤡', '🤠', '😎', '🐯', '🐷', '🐹', '🐻',
+            '🐨', '🐲', '🐳', '🐬', '🐝', '🐞', '🦕', '🦦',
+            '🦥', '🦔', '🐿️', '🦍', '🦝', '🦇', '🦈', '🦩'
         ];
 
         const loginScreen = document.getElementById('login-screen');
@@ -246,14 +258,18 @@
         const messagesContainer = document.getElementById('messages-container');
         const messageInput = document.getElementById('message-input');
         const chatForm = document.getElementById('chat-form');
-        const backToGlobalBtn = document.getElementById('back-to-global-btn');
 
         const avatarContainer = document.getElementById('avatar-container');
         avataresDisponibles.forEach(avatar => {
             const btn = document.createElement('button');
             btn.className = 'avatar-btn w-10 h-10 sm:w-14 sm:h-14 text-xl sm:text-3xl bg-gray-50 rounded-xl sm:rounded-2xl border-2 border-gray-200 hover:bg-white hover:border-purple-300 hover:shadow-md focus:outline-none flex items-center justify-center';
             btn.innerText = avatar;
+            btn.dataset.avatar = avatar; // Guardamos qué avatar es en el botón
+            
             btn.addEventListener('click', (e) => {
+                // Si el botón está deshabilitado por estar en uso, ignoramos el clic
+                if (btn.disabled) return;
+                
                 document.querySelectorAll('#avatar-container button').forEach(b => b.classList.remove('avatar-selected'));
                 e.currentTarget.classList.add('avatar-selected');
                 userData.avatar = avatar;
@@ -262,10 +278,15 @@
             avatarContainer.appendChild(btn);
         });
 
+        // ARRANCAR A ESCUCHAR QUIÉN ESTÁ CONECTADO INCLUSO ANTES DE ENTRAR
+        // Esto permite bloquear los avatares en la pantalla de inicio
+        escucharUsuariosConectados();
+
         document.getElementById('join-btn').addEventListener('click', async (e) => {
             const name = usernameInput.value.trim();
             if (!name || !userData.avatar) {
                 const err = document.getElementById('login-error');
+                err.innerText = "¡Ups! Escribe tu nombre y elige un avatar.";
                 err.classList.remove('hidden');
                 loginScreen.classList.add('animate-pulse');
                 setTimeout(() => loginScreen.classList.remove('animate-pulse'), 500);
@@ -281,12 +302,11 @@
             try { 
                 const cred = await signInAnonymously(auth); 
                 currentUser = cred.user;
-                sessionStartTime = Timestamp.now(); 
                 
                 try {
                     mostrarChat();
                     iniciarPresencia();
-                    escucharUsuariosConectados();
+                    // Ya no llamamos a escucharUsuariosConectados() aquí porque ya lo iniciamos arriba
                     abrirChat('global', 'Patio Central', '🎮');
                 } catch (errData) {
                     console.error("Error al cargar datos iniciales:", errData);
@@ -347,7 +367,7 @@
 
         function detenerTodo() {
             if (unsubscribeMessages) unsubscribeMessages();
-            if (unsubscribePresence) unsubscribePresence();
+            // No detenemos el unsubscribePresence para que la pantalla de login siga viendo los avatares ocupados
             if (heartbeatInterval) clearInterval(heartbeatInterval);
         }
 
@@ -370,28 +390,43 @@
         }
 
         function escucharUsuariosConectados() {
+            // Si ya hay un listener corriendo, lo detenemos para no duplicar
+            if (unsubscribePresence) unsubscribePresence();
+            
             const queryRef = collection(db, 'usuarios_conectados');
             unsubscribePresence = onSnapshot(queryRef, (snapshot) => {
                 const ahora = Date.now();
                 const listContainer = document.getElementById('online-users-list');
-                listContainer.innerHTML = '';
+                if (listContainer) listContainer.innerHTML = '';
+                
                 let count = 0;
+                avataresEnUso = []; // Reiniciamos la lista de ocupados
 
                 let misNotificaciones = {};
-                snapshot.forEach((docSnap) => {
-                    if (docSnap.id === currentUser.uid) {
-                        misNotificaciones = docSnap.data().notificaciones || {};
-                    }
-                });
+                if (currentUser) {
+                    snapshot.forEach((docSnap) => {
+                        if (docSnap.id === currentUser.uid) {
+                            misNotificaciones = docSnap.data().notificaciones || {};
+                        }
+                    });
+                }
 
                 window.lastNotifTimes = window.lastNotifTimes || {};
 
                 snapshot.forEach((docSnap) => {
                     const data = docSnap.data();
                     const uid = docSnap.id;
+                    
                     if (ahora - data.lastSeen < 90000) {
                         count++;
-                        if (uid !== currentUser.uid) {
+                        
+                        // Agregar el avatar a la lista de ocupados (solo si no es el mío propio)
+                        if (!currentUser || uid !== currentUser.uid) {
+                            if (data.avatar) avataresEnUso.push(data.avatar);
+                        }
+
+                        // Dibujar en el menú lateral solo si ya inicié sesión y no soy yo mismo
+                        if (currentUser && uid !== currentUser.uid && listContainer) {
                             const hasUnread = misNotificaciones[uid] > 0 && activeChatId !== generarIdPrivado(uid);
                             crearBotonUsuarioOnline(uid, data.name, data.avatar, listContainer, hasUnread);
 
@@ -402,7 +437,40 @@
                         }
                     }
                 });
-                document.getElementById('online-count').innerText = `${count} conectados 🔥`;
+                
+                const onlineCountEl = document.getElementById('online-count');
+                if (onlineCountEl) onlineCountEl.innerText = `${count} conectados 🔥`;
+                
+                // Actualizar visualmente la pantalla de Login para bloquear los en uso
+                actualizarEstadoAvatares();
+            });
+        }
+        
+        // FUNCIÓN QUE PINTA DE GRIS LOS AVATARES OCUPADOS
+        function actualizarEstadoAvatares() {
+            document.querySelectorAll('.avatar-btn').forEach(btn => {
+                const avatar = btn.dataset.avatar;
+                
+                if (avataresEnUso.includes(avatar)) {
+                    // Si está ocupado: Lo ponemos gris, opaco y lo bloqueamos
+                    btn.classList.add('grayscale', 'opacity-40', 'cursor-not-allowed', 'bg-gray-300');
+                    btn.classList.remove('hover:bg-white', 'hover:border-purple-300', 'hover:shadow-md');
+                    btn.disabled = true;
+                    
+                    // Si yo lo tenía seleccionado en la pantalla de inicio, me lo deselecciona
+                    if (userData.avatar === avatar && !currentUser) {
+                        btn.classList.remove('avatar-selected');
+                        userData.avatar = '';
+                        const err = document.getElementById('login-error');
+                        err.innerText = "¡Alguien acaba de elegir ese avatar! Por favor elige otro.";
+                        err.classList.remove('hidden');
+                    }
+                } else {
+                    // Si está libre: Lo restauramos a su estado original
+                    btn.classList.remove('grayscale', 'opacity-40', 'cursor-not-allowed', 'bg-gray-300');
+                    btn.classList.add('hover:bg-white', 'hover:border-purple-300', 'hover:shadow-md');
+                    btn.disabled = false;
+                }
             });
         }
 
@@ -445,10 +513,9 @@
             return [currentUser.uid, otroUid].sort().join('_');
         }
 
-        // Botón Global del Sidebar y Botón de Volver de la Cabecera
-        const irAlPatioCentral = () => abrirChat('global', 'Patio Central', '🎮', false);
-        document.getElementById('btn-global-chat').addEventListener('click', irAlPatioCentral);
-        backToGlobalBtn.addEventListener('click', irAlPatioCentral);
+        document.getElementById('btn-global-chat').addEventListener('click', () => {
+            abrirChat('global', 'Patio Central', '🎮', false);
+        });
 
         function abrirChat(chatId, nombre, avatar, esPrivado = false) {
             if (activeChatId === chatId && !isFirstLoad) return;
@@ -463,13 +530,6 @@
                 : `<span class="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-green-300 shadow-[0_0_8px_rgba(134,239,172,0.8)] animate-pulse"></span> <span id="online-count">Cargando...</span>`;
             document.getElementById('chat-header-icon').innerText = avatar;
 
-            // Mostrar u ocultar el botón de "Volver" dependiendo si es chat privado
-            if (esPrivado) {
-                backToGlobalBtn.classList.remove('hidden');
-            } else {
-                backToGlobalBtn.classList.add('hidden');
-            }
-
             if (esPrivado && currentUser) {
                 const otroUid = chatId.split('_').find(id => id !== currentUser.uid);
                 if (otroUid) {
@@ -479,7 +539,7 @@
             }
 
             cerrarSidebar();
-            escucharUsuariosConectados(); 
+            // Ya no llamamos a escucharUsuariosConectados() aquí
             cargarMensajesSala();
         }
 
@@ -496,8 +556,7 @@
 
             const coleccionStr = activeChatId === 'global' ? 'mensajes_colegio' : `chats_privados/${activeChatId}/mensajes`;
             const messagesRef = collection(db, coleccionStr);
-            
-            const q = query(messagesRef, where("createdAt", ">=", sessionStartTime)); 
+            const q = query(messagesRef); 
             
             let loadInitial = true;
 
@@ -605,11 +664,11 @@
                     } else {
                         html += `
                             <div class="flex items-end gap-2.5 mb-1 message-wrapper ${showHeader ? 'mt-3' : ''}">
-                                ${showHeader ? `<div class="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-lg shadow-sm flex-shrink-0">${msg.avatar}</div>` : `<div class="w-8 h-8 flex-shrink-0"></div>`}
+                                ${showHeader ? `<div class="w-10 h-10 rounded-2xl bg-white border-2 border-purple-200 flex-shrink-0 flex items-center justify-center text-xl shadow-md mb-1 z-10 transform -rotate-3">${msg.avatar || '👤'}</div>` : `<div class="w-10 flex-shrink-0"></div>`}
                                 <div class="max-w-[80%] md:max-w-[70%]">
-                                    ${showHeader ? `<p class="text-xs text-gray-500 font-bold mb-1 ml-1">${escapeHTML(msg.name)}</p>` : ''}
-                                    <div class="bg-white p-3.5 px-5 rounded-3xl ${showHeader ? 'rounded-tl-sm' : ''} shadow-sm border border-gray-100 relative group transition-all hover:shadow-md">
-                                        <p class="text-[15px] text-gray-700 font-medium leading-relaxed break-words">${escapeHTML(msg.text)}</p>
+                                    ${showHeader ? `<span class="text-[13px] text-gray-500 ml-3 mb-1 block font-extrabold tracking-wide">${escapeHTML(msg.name)}</span>` : ''}
+                                    <div class="bg-white border border-gray-100 text-gray-700 p-3.5 px-5 rounded-3xl rounded-tl-sm shadow-md relative group transition-all hover:shadow-lg">
+                                        <p class="text-[15px] font-medium leading-relaxed break-words">${escapeHTML(msg.text)}</p>
                                         <span class="text-[10px] text-gray-400 absolute bottom-1 right-3 opacity-0 group-hover:opacity-100 transition-opacity font-bold">${timeString}</span>
                                     </div>
                                 </div>
@@ -619,58 +678,71 @@
                 });
 
                 messagesContainer.innerHTML = html;
+                if (isScrolledToBottom) messagesContainer.scrollTop = messagesContainer.scrollHeight;
                 
-                if (isScrolledToBottom) {
-                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                }
             } catch (err) {
-                console.error("Error al renderizar mensajes:", err);
+                console.error("Error al procesar burbujas:", err);
+                messagesContainer.innerHTML = `<div class="text-red-500 text-center font-bold p-6">Ocurrió un error al cargar los mensajes en pantalla.</div>`;
             }
         }
+
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        
+        document.getElementById('menu-btn').onclick = () => {
+            sidebar.classList.add('open');
+            sidebarOverlay.classList.remove('hidden');
+        };
+        
+        function cerrarSidebar() {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.add('hidden');
+        }
+        document.getElementById('close-sidebar-btn').onclick = cerrarSidebar;
+        sidebarOverlay.onclick = cerrarSidebar;
+
+        document.getElementById('logout-btn').onclick = () => {
+            if(confirm("¿Seguro que quieres irte del patio?")) {
+                if(heartbeatInterval) clearInterval(heartbeatInterval);
+                document.getElementById('video-call-container').classList.add('hidden');
+                document.getElementById('jitsi-iframe')?.remove();
+                auth.signOut(); 
+            }
+        };
+
+        let isVideoActive = false;
+        document.getElementById('video-btn').onclick = function() {
+            isVideoActive = !isVideoActive;
+            const container = document.getElementById('video-call-container');
+            if (isVideoActive) {
+                container.classList.remove('hidden');
+                this.classList.replace('bg-emerald-400', 'bg-rose-500');
+                this.classList.replace('hover:bg-emerald-500', 'hover:bg-rose-600');
+                this.innerHTML = '<i data-lucide="video-off" class="w-4 h-4 sm:w-5 sm:h-5"></i>';
+                
+                const roomStr = activeChatId === 'global' ? 'SalaColorida' : `Privado_${activeChatId}`;
+                const roomName = `RecreoVirtual_${roomStr}`;
+                
+                const iframe = document.createElement('iframe');
+                iframe.id = 'jitsi-iframe';
+                iframe.src = `https://meet.jit.si/${roomName}#userInfo.displayName="${encodeURIComponent(userData.name)}"`;
+                iframe.allow = "camera; microphone; display-capture; autoplay";
+                iframe.className = "w-full h-full relative z-10 border-none shadow-inner";
+                container.appendChild(iframe);
+            } else {
+                container.classList.add('hidden');
+                this.classList.replace('bg-rose-500', 'bg-emerald-400');
+                this.classList.replace('hover:bg-rose-600', 'hover:bg-emerald-500');
+                this.innerHTML = '<i data-lucide="video" class="w-4 h-4 sm:w-5 sm:h-5"></i>';
+                document.getElementById('jitsi-iframe')?.remove();
+            }
+            lucide.createIcons();
+        };
 
         function escapeHTML(str) {
-            if (!str) return '';
-            return str.replace(/[&<>'"]/g, 
-                tag => ({
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    "'": '&#39;',
-                    '"': '&quot;'
-                }[tag] || tag)
-            );
+            if (str === null || str === undefined) return '';
+            return String(str).replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag]));
         }
-
-        // Eventos del Sidebar
-        document.getElementById('menu-btn').addEventListener('click', () => {
-            document.getElementById('sidebar').classList.add('open');
-            document.getElementById('sidebar-overlay').classList.remove('hidden');
-        });
-
-        function cerrarSidebar() {
-            document.getElementById('sidebar').classList.remove('open');
-            document.getElementById('sidebar-overlay').classList.add('hidden');
-        }
-
-        document.getElementById('close-sidebar-btn').addEventListener('click', cerrarSidebar);
-        document.getElementById('sidebar-overlay').addEventListener('click', cerrarSidebar);
-
-        // BOTÓN DE SALIR DEL SISTEMA
-        document.getElementById('logout-btn').addEventListener('click', () => {
-            if (currentUser) {
-                const userRef = doc(db, 'usuarios_conectados', currentUser.uid);
-                setDoc(userRef, { lastSeen: 0 }, { merge: true }).catch(()=>{});
-            }
-            auth.signOut();
-        });
-
-        window.addEventListener('beforeunload', () => {
-            if (currentUser) {
-                const userRef = doc(db, 'usuarios_conectados', currentUser.uid);
-                setDoc(userRef, { lastSeen: 0 }, { merge: true }).catch(()=>{});
-            }
-        });
-
     </script>
 </body>
 </html>
